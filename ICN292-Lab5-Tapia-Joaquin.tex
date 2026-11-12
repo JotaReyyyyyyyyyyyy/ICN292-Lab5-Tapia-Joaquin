@@ -1,0 +1,211 @@
+\documentclass{article}
+
+\usepackage[spanish,english]{babel}
+\addto\shorthandsspanish{\spanishdeactivate{~<>}}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage[margin=25mm,inner=30mm]{geometry}
+\usepackage{fancyhdr}
+\usepackage{listings}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue]{hyperref}
+\graphicspath{{recursos/}}
+
+\newcommand{\theCampus}{Campus Vitacura}
+\newcommand{\theAssignment}{Sistemas de Información para la Gestión}
+\newcommand{\theReportTitle}{Laboratorio 5: SQL}
+\newcommand{\theGroup}{Entrega individual · ICN-292 · Paralelo 100}
+\newcommand{\theAuthorA}{Joaquín Tapia Mandiola}
+\newcommand{\theCareer}{Ingeniería Civil Industrial}
+\newcommand{\theRepository}{https://github.com/JotaReyyyyyyyyyyyy/ICN292-Lab5-Tapia-Joaquin}
+
+\setlength{\headheight}{45pt}
+\setlength{\headsep}{12pt}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\includegraphics[scale=0.3]{Logo usmUSM.png}}
+\renewcommand{\headrulewidth}{0.5pt}
+\fancyfoot[C]{\textbf{\thepage}}
+
+\lstset{
+  language=SQL,
+  basicstyle=\ttfamily\footnotesize,
+  columns=fullflexible,
+  keepspaces=true,
+  upquote=true,
+  showstringspaces=false,
+  breaklines=false,
+  aboveskip=3pt,
+  belowskip=4pt,
+  xleftmargin=6pt,
+  xrightmargin=6pt,
+  literate={ñ}{{\~n}}1 {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+}
+\newcommand{\evidencia}[2]{%
+  \par\noindent\includegraphics[width=#2]{consulta-#1.png}\par
+}
+\hypersetup{pdftitle={ICN-292 - Laboratorio 5: SQL},pdfauthor={Joaquín Tapia Mandiola},pdfcreator={}}
+
+\begin{document}
+\selectlanguage{spanish}
+\hypersetup{pageanchor=false}
+\begin{titlepage}
+\thispagestyle{empty}
+\vspace*{1.2cm}
+\begin{center}
+\includegraphics[scale=0.5]{Logo usmUSM.png}
+\end{center}
+\vspace{2.2cm}
+\begin{center}
+\hrule
+\vspace{2mm}
+{\Huge\bfseries \theReportTitle}\\[0.5cm]
+{\Large\scshape \theAssignment}
+\vspace{5mm}
+\hrule
+\vspace{1cm}
+
+\textbf{\theGroup}\\
+\vspace{0.8cm}
+\textbf{\theAuthorA}\\
+{\small \theCareer}\\[0.7cm]
+{\small Repositorio GitHub}\\[0.2cm]
+{\small \expandafter\url\expandafter{\theRepository}}
+
+\vfill
+\textsc{Noviembre, 2026}\\[0.5cm]
+\textsc{\theCampus}
+\end{center}
+\end{titlepage}
+\hypersetup{pageanchor=true}
+\pagenumbering{arabic}
+
+\section*{Consulta 1}
+\begin{lstlisting}
+SELECT v.nombre, COUNT(ve.id_venta) AS cantidad_ventas
+FROM vendedores AS v
+LEFT JOIN ventas AS ve ON ve.id_vendedor = v.id_vendedor
+GROUP BY v.id_vendedor, v.nombre
+ORDER BY cantidad_ventas DESC, v.nombre;
+\end{lstlisting}
+\evidencia{01}{74mm}
+\vspace{5mm}
+\section*{Consulta 2}
+\begin{lstlisting}
+SELECT t.nombre AS tienda,
+       COUNT(ve.id_venta) AS cantidad_ventas,
+       COALESCE(SUM(ve.unidades), 0) AS unidades_vendidas
+FROM tiendas AS t
+LEFT JOIN vendedores AS v ON v.id_tienda = t.id_tienda
+LEFT JOIN ventas AS ve ON ve.id_vendedor = v.id_vendedor
+GROUP BY t.id_tienda, t.nombre
+ORDER BY unidades_vendidas DESC, t.nombre;
+\end{lstlisting}
+\evidencia{02}{88mm}
+\clearpage
+\section*{Consulta 3}
+\begin{lstlisting}
+SELECT t.nombre, t.comuna
+FROM tiendas AS t
+LEFT JOIN vendedores AS v ON v.id_tienda = t.id_tienda
+WHERE v.id_vendedor IS NULL;
+\end{lstlisting}
+\evidencia{03}{74mm}
+\vspace{5mm}
+\section*{Consulta 4}
+\begin{lstlisting}
+SELECT b.modelo
+FROM bicicletas AS b
+LEFT JOIN ventas AS ve
+       ON ve.id_bicicleta = b.id_bicicleta
+      AND ve.fecha >= '2025-06-01' AND ve.fecha < '2025-07-01'
+WHERE ve.id_venta IS NULL
+ORDER BY b.modelo;
+\end{lstlisting}
+\noindent\footnotesize La condición del mes va en el \texttt{ON} del \texttt{LEFT JOIN}; si la hubiera puesto en el \texttt{WHERE}, la consulta no devolvería filas, porque los modelos sin venta en junio llegan con la fecha en \texttt{NULL} y no cumplen el filtro.\par\normalsize
+\smallskip
+\evidencia{04}{74mm}
+\clearpage
+\section*{Consulta 5}
+\begin{lstlisting}
+SELECT v.nombre, t.nombre AS tienda
+FROM vendedores AS v
+LEFT JOIN tiendas AS t ON t.id_tienda = v.id_tienda
+LEFT JOIN ventas AS ve ON ve.id_vendedor = v.id_vendedor
+WHERE ve.id_venta IS NULL
+ORDER BY v.nombre;
+\end{lstlisting}
+\evidencia{05}{74mm}
+\vspace{5mm}
+\section*{Consulta 6}
+\begin{lstlisting}
+SELECT a.nombre AS vendedor_antiguo, a.fecha_ingreso AS ingreso_antiguo,
+       b.nombre AS vendedor_nuevo, b.fecha_ingreso AS ingreso_nuevo,
+       t.nombre AS tienda
+FROM vendedores AS a
+JOIN vendedores AS b
+  ON b.id_tienda = a.id_tienda
+ AND (a.fecha_ingreso < b.fecha_ingreso
+      OR (a.fecha_ingreso = b.fecha_ingreso AND a.id_vendedor < b.id_vendedor))
+JOIN tiendas AS t ON t.id_tienda = a.id_tienda
+ORDER BY t.id_tienda, a.fecha_ingreso, b.fecha_ingreso;
+\end{lstlisting}
+\evidencia{06}{135mm}
+\clearpage
+\section*{Consulta 7}
+\begin{lstlisting}
+SELECT t.nombre AS tienda, SUM(ve.unidades * b.precio) AS monto_montana_ruta
+FROM tiendas AS t
+JOIN vendedores AS v ON v.id_tienda = t.id_tienda
+JOIN ventas AS ve ON ve.id_vendedor = v.id_vendedor
+JOIN bicicletas AS b ON b.id_bicicleta = ve.id_bicicleta
+WHERE b.categoria IN ('Montaña', 'Ruta')
+GROUP BY t.id_tienda, t.nombre
+HAVING SUM(ve.unidades * b.precio) > 2000000
+ORDER BY monto_montana_ruta DESC;
+\end{lstlisting}
+\evidencia{07}{74mm}
+\vspace{5mm}
+\section*{Consulta 8}
+\begin{lstlisting}
+SELECT modelo, precio
+FROM bicicletas
+WHERE precio > (SELECT AVG(precio) FROM bicicletas)
+ORDER BY precio DESC;
+\end{lstlisting}
+\evidencia{08a}{74mm}
+\smallskip
+\begin{lstlisting}
+SELECT AVG(precio) AS promedio_catalogo
+FROM bicicletas;
+\end{lstlisting}
+\evidencia{08b}{74mm}
+\smallskip
+\noindent\footnotesize El promedio del catálogo es 657.490,00. Lo calcula la subconsulta \texttt{SELECT AVG(precio) FROM bicicletas} del \texttt{WHERE}; la segunda sentencia lo muestra por separado.\par\normalsize
+\clearpage
+\section*{Consulta 9}
+\begin{lstlisting}
+SELECT v.nombre, AVG(ve.unidades) AS promedio_unidades
+FROM vendedores AS v
+JOIN ventas AS ve ON ve.id_vendedor = v.id_vendedor
+GROUP BY v.id_vendedor, v.nombre
+HAVING AVG(ve.unidades) > (SELECT AVG(unidades) FROM ventas)
+ORDER BY promedio_unidades DESC, v.nombre;
+\end{lstlisting}
+\evidencia{09}{74mm}
+\vspace{5mm}
+\section*{Consulta 10}
+\begin{lstlisting}
+SELECT v.nombre, SUM(ve.unidades * b.precio) AS monto_total
+FROM vendedores AS v
+LEFT JOIN ventas AS ve ON ve.id_vendedor = v.id_vendedor
+LEFT JOIN bicicletas AS b ON b.id_bicicleta = ve.id_bicicleta
+GROUP BY v.id_vendedor, v.nombre
+ORDER BY monto_total DESC;
+\end{lstlisting}
+\noindent\footnotesize Fernanda Lillo y Rubén Castro muestran \texttt{NULL} porque no tienen ventas: el \texttt{LEFT JOIN} los deja sin filas que sumar y \texttt{SUM} devuelve \texttt{NULL}. Para que mostraran cero habría que usar \texttt{COALESCE(SUM(ve.unidades * b.precio), 0)}.\par\normalsize
+\smallskip
+\evidencia{10}{74mm}
+\end{document}
